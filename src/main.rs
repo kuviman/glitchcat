@@ -74,7 +74,7 @@ fn main() {
             );
             if 0 <= i && i < line.len() as isize {
                 let i = i as usize;
-                glitched_line[i] = if rand::thread_rng().gen() {
+                glitched_line[i] = if rand::thread_rng().gen::<f32>() < 0.9 {
                     homoglyphs.random_silimar(line[i])
                 } else {
                     line[i]
@@ -82,9 +82,14 @@ fn main() {
             }
             stdout.move_cursor_up(1).unwrap();
             stdout.clear_line().unwrap();
-            stdout
-                .write_line(&glitched_line.iter().map(|&c| c).collect::<String>())
-                .unwrap();
+            for (&c, &initial) in glitched_line.iter().zip(line.iter()) {
+                if c == initial {
+                    print!("{}", c);
+                } else {
+                    print!("{}", console::style(c).dim());
+                }
+            }
+            println!();
             std::thread::sleep(std::time::Duration::from_millis(ANIMATION_STEP));
         }
         stdout.move_cursor_up(1).unwrap();
