@@ -37,11 +37,15 @@ impl Homoglyphs {
     }
 }
 
+const GLITCH_RADIUS: usize = 15;
+const ANIMATION_STEP: u64 = 16;
+
 fn main() {
+    let stdout = console::Term::stdout();
     let homoglyphs = Homoglyphs::new();
     let mut line = String::new();
     loop {
-        let line = {
+        let line: Vec<char> = {
             line.clear();
             std::io::stdin()
                 .read_line(&mut line)
@@ -49,9 +53,34 @@ fn main() {
             if line.len() == 0 {
                 break;
             }
-            line.trim_right_matches('\n').trim_right_matches('\r')
+            line.trim_right_matches('\n')
+                .trim_right_matches('\r')
+                .chars()
+                .collect()
         };
-        let glitched: String = line.chars().map(|c| homoglyphs.random_silimar(c)).collect();
-        println!("{}", glitched);
+        let mut first = true;
+        for glitch_center in -(GLITCH_RADIUS as isize)..(line.len() + GLITCH_RADIUS + 1) as isize {
+            let glitched: String = line.iter()
+                .enumerate()
+                .map(|(i, &c)| {
+                    use rand::Rng;
+                    let dist = (i as isize - glitch_center).abs() as usize;
+                    if rand::thread_rng().gen_range(0, GLITCH_RADIUS) >= dist {
+                        homoglyphs.random_silimar(c)
+                    } else {
+                        c
+                    }
+                })
+                .collect();
+            if first {
+                first = false;
+            } else {
+                stdout.move_cursor_up(1).unwrap();
+                stdout.clear_line().unwrap();
+            }
+            stdout.write_line(&glitched).unwrap();
+            std::thread::sleep(std::time::Duration::from_millis(ANIMATION_STEP));
+        }
+        let glitched: String = line.iter().map(|&c| homoglyphs.random_silimar(c)).collect();
     }
 }
