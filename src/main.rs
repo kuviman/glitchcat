@@ -61,7 +61,7 @@ impl Homoglyphs {
             ($mode:expr => $($option:ident),*) => {
                 match $mode {
                     $(
-                        GlyphsMode::$option => Self::new(include_str!(concat!(stringify!($option), ".txt"))),
+                        GlyphsMode::$option => Self::new(include_str!(concat!("../modes/", stringify!($option), ".txt"))),
                     )*
                 }
             };
