@@ -50,6 +50,7 @@ impl Homoglyphs {
 
 #[derive(Debug, EnumString)]
 enum GlyphsMode {
+    Default,
     CyrConv,
     HomoGlyphs,
 }
@@ -65,7 +66,7 @@ impl Homoglyphs {
                 }
             };
         }
-        gen_options!(mode => CyrConv, HomoGlyphs)
+        gen_options!(mode => Default, CyrConv, HomoGlyphs)
     }
 }
 
@@ -79,8 +80,8 @@ struct Opt {
     #[structopt(
         short = "g",
         long = "glyphs",
-        default_value = "CyrConv",
-        help = "Glyphs mode (CyrConv or HomoGlyphs)"
+        default_value = "Default",
+        help = "Glyphs mode (Default, CyrConv or HomoGlyphs)"
     )]
     glyphs_mode: GlyphsMode,
 }
