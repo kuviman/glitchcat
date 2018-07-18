@@ -1,7 +1,9 @@
 extern crate console;
 extern crate rand;
 
+use rand::Rng;
 use std::collections::HashMap;
+use std::io::Read;
 
 struct Homoglyphs {
     groups: Vec<Vec<char>>,
@@ -28,7 +30,6 @@ impl Homoglyphs {
     pub fn random_silimar(&self, c: char) -> char {
         match self.group_map.get(&c) {
             Some(&index) => {
-                use rand::Rng;
                 let group = &self.groups[index];
                 group[rand::thread_rng().gen_range(0, group.len())]
             }
@@ -37,14 +38,13 @@ impl Homoglyphs {
     }
 }
 
-const GLITCH_RADIUS: usize = 15;
+const GLITCH_RADIUS: usize = 32;
 const ANIMATION_STEP: u64 = 16;
 
 fn main() {
     let stdout = console::Term::stdout();
     let homoglyphs = Homoglyphs::new();
     let lines: Vec<String> = {
-        use std::io::Read;
         let mut text = String::new();
         std::io::stdin()
             .read_to_string(&mut text)
@@ -54,32 +54,44 @@ fn main() {
     for line in &lines {
         stdout.write_line(line).unwrap();
     }
-    stdout.move_cursor_up(lines.len()).unwrap();
+    if !lines.is_empty() {
+        stdout.move_cursor_up(lines.len() - 1).unwrap();
+    }
     for line in lines {
         let line: Vec<char> = line.chars().collect();
-        let mut first = true;
-        for glitch_center in -(GLITCH_RADIUS as isize)..(line.len() + GLITCH_RADIUS + 1) as isize {
-            let glitched: String = line.iter()
-                .enumerate()
-                .map(|(i, &c)| {
-                    use rand::Rng;
-                    let dist = (i as isize - glitch_center).abs() as usize;
-                    if rand::thread_rng().gen_range(0, GLITCH_RADIUS) >= dist {
-                        homoglyphs.random_silimar(c)
-                    } else {
-                        c
-                    }
-                })
-                .collect();
-            if first {
-                first = false;
-            } else {
-                stdout.move_cursor_up(1).unwrap();
-                stdout.clear_line().unwrap();
+        let mut glitched_line = line.clone();
+        for glitch_center in
+            -(GLITCH_RADIUS as isize)..(glitched_line.len() + GLITCH_RADIUS + 1) as isize
+        {
+            if glitch_center > GLITCH_RADIUS as isize {
+                for i in 0..glitch_center as usize - GLITCH_RADIUS - 1 {
+                    glitched_line[i] = line[i];
+                }
             }
-            stdout.write_line(&glitched).unwrap();
+            let i = rand::thread_rng().gen_range(
+                glitch_center - GLITCH_RADIUS as isize,
+                glitch_center + GLITCH_RADIUS as isize + 1,
+            );
+            if 0 <= i && i < line.len() as isize {
+                let i = i as usize;
+                glitched_line[i] = if rand::thread_rng().gen() {
+                    homoglyphs.random_silimar(line[i])
+                } else {
+                    line[i]
+                };
+            }
+            stdout.move_cursor_up(1).unwrap();
+            stdout.clear_line().unwrap();
+            stdout
+                .write_line(&glitched_line.iter().map(|&c| c).collect::<String>())
+                .unwrap();
             std::thread::sleep(std::time::Duration::from_millis(ANIMATION_STEP));
         }
-        let glitched: String = line.iter().map(|&c| homoglyphs.random_silimar(c)).collect();
+        stdout.move_cursor_up(1).unwrap();
+        stdout.clear_line().unwrap();
+        stdout
+            .write_line(&line.iter().map(|&c| c).collect::<String>())
+            .unwrap();
+        stdout.move_cursor_down(1).unwrap();
     }
 }
