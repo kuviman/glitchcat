@@ -43,21 +43,20 @@ const ANIMATION_STEP: u64 = 16;
 fn main() {
     let stdout = console::Term::stdout();
     let homoglyphs = Homoglyphs::new();
-    let mut line = String::new();
-    loop {
-        let line: Vec<char> = {
-            line.clear();
-            std::io::stdin()
-                .read_line(&mut line)
-                .expect("Failed to read line");
-            if line.len() == 0 {
-                break;
-            }
-            line.trim_right_matches('\n')
-                .trim_right_matches('\r')
-                .chars()
-                .collect()
-        };
+    let lines: Vec<String> = {
+        use std::io::Read;
+        let mut text = String::new();
+        std::io::stdin()
+            .read_to_string(&mut text)
+            .expect("Failed to read text");
+        text.lines().map(|s| s.to_owned()).collect()
+    };
+    for line in &lines {
+        stdout.write_line(line).unwrap();
+    }
+    stdout.move_cursor_up(lines.len()).unwrap();
+    for line in lines {
+        let line: Vec<char> = line.chars().collect();
         let mut first = true;
         for glitch_center in -(GLITCH_RADIUS as isize)..(line.len() + GLITCH_RADIUS + 1) as isize {
             let glitched: String = line.iter()
