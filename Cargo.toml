@@ -5,3 +5,4 @@ authors = ["kuviman <kuviman@gmail.com>"]
 
 [dependencies]
 console = "*"
+rand = "*"

@@ -1,9 +1,10 @@
 extern crate console;
+extern crate rand;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 struct Homoglyphs {
-    groups: Vec<HashSet<char>>,
+    groups: Vec<Vec<char>>,
     group_map: HashMap<char, usize>,
 }
 
@@ -23,11 +24,22 @@ impl Homoglyphs {
         }
         Self { groups, group_map }
     }
+
+    pub fn random_silimar(&self, c: char) -> char {
+        match self.group_map.get(&c) {
+            Some(&index) => {
+                use rand::Rng;
+                let group = &self.groups[index];
+                group[rand::thread_rng().gen_range(0, group.len())]
+            }
+            None => c,
+        }
+    }
 }
 
 fn main() {
     let homoglyphs = Homoglyphs::new();
-    for c in "Hello, world!".chars() {
-        println!("{:?}: {:?}", c, homoglyphs.groups[homoglyphs.group_map[&c]]);
-    }
+    let text = "Hello, world!";
+    let glitched: String = text.chars().map(|c| homoglyphs.random_silimar(c)).collect();
+    println!("{} -> {}", text, glitched);
 }
