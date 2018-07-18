@@ -6,3 +6,6 @@ authors = ["kuviman <kuviman@gmail.com>"]
 [dependencies]
 console = "*"
 rand = "*"
+structopt = "*"
+strum = "*"
+strum_macros = "*"

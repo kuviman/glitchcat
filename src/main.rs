@@ -1,5 +1,10 @@
 extern crate console;
 extern crate rand;
+#[macro_use]
+extern crate structopt;
+extern crate strum;
+#[macro_use]
+extern crate strum_macros;
 
 use rand::Rng;
 use std::collections::HashMap;
@@ -11,10 +16,10 @@ struct Homoglyphs {
 }
 
 impl Homoglyphs {
-    pub fn new() -> Self {
+    pub fn new(data: &str) -> Self {
         let mut groups = Vec::new();
         let mut group_map = HashMap::new();
-        for line in include_str!("homoglyphs.txt").lines() {
+        for line in data.lines() {
             if line.starts_with('#') {
                 continue;
             }
@@ -43,13 +48,48 @@ impl Homoglyphs {
     }
 }
 
+#[derive(Debug, EnumString)]
+enum GlyphsMode {
+    CyrConv,
+    HomoGlyphs,
+}
+
+impl Homoglyphs {
+    pub fn new_with_mode(mode: GlyphsMode) -> Self {
+        macro_rules! gen_options {
+            ($mode:expr => $($option:ident),*) => {
+                match $mode {
+                    $(
+                        GlyphsMode::$option => Self::new(include_str!(concat!(stringify!($option), ".txt"))),
+                    )*
+                }
+            };
+        }
+        gen_options!(mode => CyrConv, HomoGlyphs)
+    }
+}
+
 const GLITCH_RADIUS: usize = 32;
 const GLITCH_AMOUNT: usize = 5;
 const ANIMATION_STEP: u64 = 16;
 
+#[derive(StructOpt)]
+#[structopt(about = "cat-like program with glitch-like animation")]
+struct Opt {
+    #[structopt(
+        short = "g",
+        long = "glyphs",
+        default_value = "CyrConv",
+        help = "Glyphs mode (CyrConv or HomoGlyphs)"
+    )]
+    glyphs_mode: GlyphsMode,
+}
+
 fn main() {
+    use structopt::StructOpt;
+    let opt = Opt::from_args();
     let stdout = console::Term::stdout();
-    let homoglyphs = Homoglyphs::new();
+    let homoglyphs = Homoglyphs::new_with_mode(opt.glyphs_mode);
     let lines: Vec<String> = {
         let mut text = String::new();
         std::io::stdin()
