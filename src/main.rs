@@ -31,7 +31,12 @@ impl Homoglyphs {
         match self.group_map.get(&c) {
             Some(&index) => {
                 let group = &self.groups[index];
-                group[rand::thread_rng().gen_range(0, group.len())]
+                let i = rand::thread_rng().gen_range(0, group.len() - 1);
+                if group[i] == c {
+                    group[i + 1]
+                } else {
+                    group[i]
+                }
             }
             None => c,
         }
@@ -39,6 +44,7 @@ impl Homoglyphs {
 }
 
 const GLITCH_RADIUS: usize = 32;
+const GLITCH_AMOUNT: usize = 5;
 const ANIMATION_STEP: u64 = 16;
 
 fn main() {
@@ -68,17 +74,19 @@ fn main() {
                     glitched_line[i] = line[i];
                 }
             }
-            let i = rand::thread_rng().gen_range(
-                glitch_center - GLITCH_RADIUS as isize,
-                glitch_center + GLITCH_RADIUS as isize + 1,
-            );
-            if 0 <= i && i < line.len() as isize {
-                let i = i as usize;
-                glitched_line[i] = if rand::thread_rng().gen::<f32>() < 0.9 {
-                    homoglyphs.random_silimar(line[i])
-                } else {
-                    line[i]
-                };
+            for _ in 0..GLITCH_AMOUNT {
+                let i = rand::thread_rng().gen_range(
+                    glitch_center - GLITCH_RADIUS as isize,
+                    glitch_center + GLITCH_RADIUS as isize + 1,
+                );
+                if 0 <= i && i < line.len() as isize {
+                    let i = i as usize;
+                    glitched_line[i] = if rand::thread_rng().gen::<f32>() < 0.7 {
+                        homoglyphs.random_silimar(line[i])
+                    } else {
+                        line[i]
+                    };
+                }
             }
             stdout.move_cursor_up(1).unwrap();
             stdout.clear_line().unwrap();
