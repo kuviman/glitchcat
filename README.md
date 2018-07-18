@@ -4,6 +4,10 @@
 
 ![gif](demo.gif)
 
+Use can even use it together with [`lolcat`](https://github.com/busyloop/lolcat)
+
+![gif](demo-lolcat.gif)
+
 ## Install
 
 To install, run:
