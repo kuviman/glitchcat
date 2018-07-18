@@ -90,13 +90,24 @@ fn main() {
     use structopt::StructOpt;
     let opt = Opt::from_args();
     let stdout = console::Term::stdout();
+    let stdout_width = stdout.size().1 as usize;
     let homoglyphs = Homoglyphs::new_with_mode(opt.glyphs_mode);
     let lines: Vec<String> = {
         let mut text = String::new();
         std::io::stdin()
             .read_to_string(&mut text)
             .expect("Failed to read text");
-        text.lines().map(|s| s.to_owned()).collect()
+        let mut lines = Vec::new();
+        for line in text.lines() {
+            let line: Vec<char> = line.chars().collect();
+            let mut line: &[char] = &line;
+            while line.len() > stdout_width {
+                lines.push(line[0..stdout_width].to_owned());
+                line = &line[stdout_width..]
+            }
+            lines.push(line.to_owned());
+        }
+        lines.into_iter().map(|s| s.into_iter().collect()).collect()
     };
     for line in &lines {
         stdout.write_line(line).unwrap();
