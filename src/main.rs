@@ -38,8 +38,10 @@ impl Homoglyphs {
 }
 
 fn main() {
+    use std::io::Read;
     let homoglyphs = Homoglyphs::new();
-    let text = "Hello, world!";
+    let mut text = String::new();
+    std::io::stdin().read_to_string(&mut text).unwrap();
     let glitched: String = text.chars().map(|c| homoglyphs.random_silimar(c)).collect();
-    println!("{} -> {}", text, glitched);
+    println!("{}", glitched);
 }
