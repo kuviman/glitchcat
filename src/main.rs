@@ -13,29 +13,73 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::io::Read;
 
-const GLITCH_RADIUS: usize = 32;
-const GLITCH_AMOUNT: usize = 5;
-const ANIMATION_STEP: u64 = 16;
-
 #[derive(StructOpt)]
 #[structopt(about = "cat-like program with glitch-like animation")]
 struct Opt {
     #[structopt(
-        short = "g",
-        long = "glyphs",
+        short = "m",
+        long = "mode",
         default_value = "Default",
         help = "Glyphs mode (Default, CyrConv or HomoGlyphs)"
     )]
-    glyphs_mode: GlyphsMode,
+    mode: GlyphsMode,
+    #[structopt(
+        short = "d",
+        long = "duration",
+        default_value = "1000",
+        help = "Duration of animation in millis (negative means infinite)"
+    )]
+    duration: i64,
+    #[structopt(
+        short = "s", long = "step", default_value = "100", help = "Animation step in millis"
+    )]
+    step: u64,
+    #[structopt(
+        short = "a",
+        long = "amount",
+        default_value = "30",
+        help = "Percentage of symbols glitched each animation step"
+    )]
+    amount: usize,
+    #[structopt(
+        short = "g",
+        long = "glitchness",
+        default_value = "60",
+        help = "Probability of a symbol to be glitched into other symbol"
+    )]
+    glitchness: usize,
+}
+
+fn print(
+    stdout: &console::Term,
+    initial_lines: &Vec<Vec<char>>,
+    lines: &Vec<Vec<char>>,
+    first: bool,
+) {
+    if !first {
+        stdout.clear_last_lines(lines.len()).unwrap();
+    }
+    for (initial_line, line) in initial_lines.iter().zip(lines.iter()) {
+        let mut output = String::new();
+        for (&initial_c, &c) in initial_line.iter().zip(line.iter()) {
+            if initial_c == c {
+                output.push(c);
+            } else {
+                output += &console::style(c).dim().to_string();
+            }
+        }
+        stdout.write_line(&output).unwrap();
+    }
+    stdout.flush().unwrap();
 }
 
 fn main() {
     use structopt::StructOpt;
     let opt = Opt::from_args();
-    let stdout = console::Term::stdout();
+    let stdout = console::Term::buffered_stdout();
     let stdout_width = stdout.size().1 as usize;
-    let homoglyphs = Homoglyphs::new_with_mode(opt.glyphs_mode);
-    let lines: Vec<String> = {
+    let homoglyphs = Homoglyphs::new_with_mode(opt.mode);
+    let initial_lines: Vec<Vec<char>> = {
         let mut text = String::new();
         std::io::stdin()
             .read_to_string(&mut text)
@@ -50,56 +94,39 @@ fn main() {
             }
             lines.push(line.to_owned());
         }
-        lines.into_iter().map(|s| s.into_iter().collect()).collect()
+        lines
     };
-    for line in &lines {
-        stdout.write_line(line).unwrap();
-    }
-    if !lines.is_empty() {
-        stdout.move_cursor_up(lines.len() - 1).unwrap();
-    }
-    for line in lines {
-        let line: Vec<char> = line.chars().collect();
-        let mut glitched_line = line.clone();
-        for glitch_center in
-            -(GLITCH_RADIUS as isize)..(glitched_line.len() + GLITCH_RADIUS + 1) as isize
-        {
-            if glitch_center > GLITCH_RADIUS as isize {
-                for i in 0..glitch_center as usize - GLITCH_RADIUS - 1 {
-                    glitched_line[i] = line[i];
-                }
+    let duration = if opt.duration < 0 {
+        None
+    } else {
+        Some(std::time::Duration::from_millis(opt.duration as u64))
+    };
+    let mut lines = initial_lines.clone();
+    print(&stdout, &initial_lines, &lines, true);
+    let start_instant = std::time::Instant::now();
+    let mut rng = rand::thread_rng();
+    loop {
+        if let Some(duration) = duration {
+            if start_instant.elapsed() >= duration {
+                break;
             }
-            for _ in 0..GLITCH_AMOUNT {
-                let i = rand::thread_rng().gen_range(
-                    glitch_center - GLITCH_RADIUS as isize,
-                    glitch_center + GLITCH_RADIUS as isize + 1,
-                );
-                if 0 <= i && i < line.len() as isize {
-                    let i = i as usize;
-                    glitched_line[i] = if rand::thread_rng().gen::<f32>() < 0.7 {
-                        homoglyphs.random_silimar(line[i])
-                    } else {
-                        line[i]
-                    };
-                }
-            }
-            stdout.move_cursor_up(1).unwrap();
-            stdout.clear_line().unwrap();
-            for (&c, &initial) in glitched_line.iter().zip(line.iter()) {
-                if c == initial {
-                    print!("{}", c);
-                } else {
-                    print!("{}", console::style(c).dim());
-                }
-            }
-            println!();
-            std::thread::sleep(std::time::Duration::from_millis(ANIMATION_STEP));
         }
-        stdout.move_cursor_up(1).unwrap();
-        stdout.clear_line().unwrap();
-        stdout
-            .write_line(&line.iter().map(|&c| c).collect::<String>())
-            .unwrap();
-        stdout.move_cursor_down(1).unwrap();
+        for _ in 0..opt.amount {
+            let row = rng.gen_range(0, lines.len());
+            let line = &mut lines[row];
+            if line.is_empty() {
+                continue;
+            }
+            let col = rng.gen_range(0, line.len());
+            let c = &mut line[col];
+            *c = if rng.gen_range(0, 100) < opt.glitchness {
+                homoglyphs.random_silimar(initial_lines[row][col])
+            } else {
+                initial_lines[row][col]
+            }
+        }
+        print(&stdout, &initial_lines, &lines, false);
+        std::thread::sleep(std::time::Duration::from_millis(opt.step));
     }
+    print(&stdout, &initial_lines, &initial_lines, false);
 }
