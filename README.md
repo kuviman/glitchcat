@@ -15,13 +15,13 @@ Use can even use it together with [`lolcat`](https://github.com/busyloop/lolcat)
 To install, run:
 
 ```sh
-cargo install --git https://github.com/kuviman/glitchcat
+cargo install glitchcat
 ```
 
 To update, run:
 
 ```sh
-cargo install --git https://github.com/kuviman/glitchcat --force
+cargo install --force glitchcat
 ```
 
 ## Usage
