@@ -1,7 +1,10 @@
 [package]
 name = "glitchcat"
+description = "cat-like program with glitch-like animation"
 version = "0.1.0"
 authors = ["kuviman <kuviman@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/kuviman/glitchcat"
 
 [dependencies]
 console = "*"
