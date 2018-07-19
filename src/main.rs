@@ -48,6 +48,13 @@ struct Opt {
         help = "Probability of a symbol to be glitched into other symbol"
     )]
     glitchness: usize,
+    #[structopt(
+        short = "f",
+        long = "fade",
+        default_value = "400",
+        help = "Time to fade back to normal text in millis"
+    )]
+    fade: u64,
 }
 
 fn print(
@@ -106,9 +113,15 @@ fn main() {
     let start_instant = std::time::Instant::now();
     let mut rng = rand::thread_rng();
     loop {
+        let mut glitchness = opt.glitchness;
         if let Some(duration) = duration {
             if start_instant.elapsed() >= duration {
                 break;
+            }
+            let time_left = duration - start_instant.elapsed();
+            let time_left = time_left.as_secs() * 1000 + time_left.subsec_millis() as u64;
+            if time_left < opt.fade {
+                glitchness = glitchness * (opt.fade - time_left) as usize / opt.fade as usize;
             }
         }
         for _ in 0..opt.amount {
@@ -119,7 +132,7 @@ fn main() {
             }
             let col = rng.gen_range(0, line.len());
             let c = &mut line[col];
-            *c = if rng.gen_range(0, 100) < opt.glitchness {
+            *c = if rng.gen_range(0, 100) < glitchness {
                 homoglyphs.random_silimar(initial_lines[row][col])
             } else {
                 initial_lines[row][col]
