@@ -29,5 +29,5 @@ cargo install --force glitchcat
 Example usage:
 
 ```sh
-echo "Hello, world!" | glitchcat
+echo "Hello, world\!" | glitchcat
 ```
