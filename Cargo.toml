@@ -5,6 +5,8 @@ version = "0.1.0"
 authors = ["kuviman <kuviman@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/kuviman/glitchcat"
+readme = "README.md"
+categories = ["command-line-utilities"]
 
 [dependencies]
 console = "0.6"
