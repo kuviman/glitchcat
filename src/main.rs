@@ -37,14 +37,14 @@ struct Opt {
     #[structopt(
         short = "a",
         long = "amount",
-        default_value = "30",
+        default_value = "100",
         help = "Percentage of symbols glitched each animation step"
     )]
     amount: usize,
     #[structopt(
         short = "g",
         long = "glitchness",
-        default_value = "60",
+        default_value = "100",
         help = "Probability of a symbol to be glitched into other symbol"
     )]
     glitchness: usize,
@@ -121,21 +121,18 @@ fn main() {
             let time_left = duration - start_instant.elapsed();
             let time_left = time_left.as_secs() * 1000 + time_left.subsec_millis() as u64;
             if time_left < opt.fade {
-                glitchness = glitchness * (opt.fade - time_left) as usize / opt.fade as usize;
+                glitchness = glitchness * time_left as usize / opt.fade as usize;
             }
         }
-        for _ in 0..opt.amount {
-            let row = rng.gen_range(0, lines.len());
-            let line = &mut lines[row];
-            if line.is_empty() {
-                continue;
-            }
-            let col = rng.gen_range(0, line.len());
-            let c = &mut line[col];
-            *c = if rng.gen_range(0, 100) < glitchness {
-                homoglyphs.random_silimar(initial_lines[row][col])
-            } else {
-                initial_lines[row][col]
+        for (initial_line, line) in initial_lines.iter().zip(lines.iter_mut()) {
+            for (&initial_c, c) in initial_line.iter().zip(line.iter_mut()) {
+                if rng.gen_range(0, 100) < glitchness {
+                    if rng.gen_range(0, 100) < opt.amount {
+                        *c = homoglyphs.random_silimar(initial_c);
+                    }
+                } else {
+                    *c = initial_c;
+                }
             }
         }
         print(&stdout, &initial_lines, &lines, false);
