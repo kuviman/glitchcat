@@ -37,14 +37,14 @@ struct Opt {
     #[structopt(
         short = "a",
         long = "amount",
-        default_value = "100",
+        default_value = "90",
         help = "Percentage of symbols glitched each animation step"
     )]
     amount: usize,
     #[structopt(
         short = "g",
         long = "glitchness",
-        default_value = "100",
+        default_value = "80",
         help = "Probability of a symbol to be glitched into other symbol"
     )]
     glitchness: usize,
