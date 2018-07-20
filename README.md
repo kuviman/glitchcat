@@ -33,3 +33,9 @@ Example usage:
 ```sh
 echo "Hello, world\!" | glitchcat
 ```
+
+For more, see
+
+```sh
+glitchcat --help
+```
