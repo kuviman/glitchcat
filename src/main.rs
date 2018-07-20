@@ -10,7 +10,7 @@ mod homoglyph;
 
 use homoglyph::*;
 use rand::Rng;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io::Read;
 use std::str::FromStr;
 

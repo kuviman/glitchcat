@@ -1,31 +1,37 @@
 use *;
 
 pub struct Homoglyphs {
-    groups: Vec<Vec<char>>,
-    group_map: HashMap<char, usize>,
+    groups: HashMap<char, HashSet<char>>,
 }
 
 impl Homoglyphs {
     pub fn new(data: &str) -> Self {
-        let mut groups = Vec::new();
-        let mut group_map = HashMap::new();
+        let mut groups = HashMap::new();
         for line in data.lines() {
             if line.starts_with('#') {
                 continue;
             }
-            let group = line.chars().collect();
-            for &c in &group {
-                group_map.insert(c, groups.len());
+            let group: HashSet<char> = line.chars().collect();
+            for &c1 in &group {
+                for &c2 in &group {
+                    let mut insert = |c_in, c_out| {
+                        if !groups.contains_key(&c_in) {
+                            groups.insert(c_in, HashSet::new());
+                        }
+                        groups.get_mut(&c_in).unwrap().insert(c_out);
+                    };
+                    insert(c1, c2);
+                    insert(c2, c2);
+                }
             }
-            groups.push(group);
         }
-        Self { groups, group_map }
+        Self { groups }
     }
 
     pub fn random_silimar(&self, c: char) -> char {
-        match self.group_map.get(&c) {
-            Some(&index) => {
-                let group = &self.groups[index];
+        match self.groups.get(&c) {
+            Some(group) => {
+                let group: Vec<char> = group.iter().map(|&c| c).collect();
                 let i = rand::thread_rng().gen_range(0, group.len() - 1);
                 if group[i] == c {
                     group[i + 1]
