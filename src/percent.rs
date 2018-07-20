@@ -24,14 +24,10 @@ impl Percent {
 impl FromStr for Percent {
     type Err = ParsePercentError;
     fn from_str(s: &str) -> Result<Self, ParsePercentError> {
-        let value = match s.parse() {
-            Ok(value) => value,
-            Err(e) => return Err(ParsePercentError::ParseIntError(e)),
-        };
-        if value > 100 {
-            Err(ParsePercentError::TooBig)
-        } else {
-            Ok(Percent(value))
+        match s.parse() {
+            Ok(value) if value <= 100 => Ok(Percent(value)),
+            Ok(_) => Err(ParsePercentError::TooBig),
+            Err(e) => Err(ParsePercentError::ParseIntError(e)),
         }
     }
 }
