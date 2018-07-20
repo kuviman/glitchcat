@@ -45,7 +45,7 @@ impl Homoglyphs {
     }
 }
 
-#[derive(Debug, EnumString)]
+#[derive(Debug, EnumString, Copy, Clone)]
 pub enum GlyphsMode {
     Default,
     CyrConv,
