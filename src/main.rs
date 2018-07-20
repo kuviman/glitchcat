@@ -12,6 +12,23 @@ use homoglyph::*;
 use rand::Rng;
 use std::collections::HashMap;
 use std::io::Read;
+use std::str::FromStr;
+
+pub enum Duration {
+    Some(std::time::Duration),
+    Infinite,
+}
+
+impl FromStr for Duration {
+    type Err = <u64 as FromStr>::Err;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "infinite" {
+            Ok(Duration::Infinite)
+        } else {
+            Ok(Duration::Some(std::time::Duration::from_millis(s.parse()?)))
+        }
+    }
+}
 
 #[derive(StructOpt)]
 #[structopt(about = "cat-like program with glitch-like animation")]
@@ -27,11 +44,14 @@ struct Opt {
         short = "d",
         long = "duration",
         default_value = "1000",
-        help = "Duration of animation in millis (negative means infinite)"
+        help = "Duration of animation in millis (of \"infinite\")"
     )]
-    duration: i64,
+    duration: Duration,
     #[structopt(
-        short = "s", long = "step", default_value = "100", help = "Animation step in millis"
+        short = "s",
+        long = "step",
+        default_value = "100",
+        help = "Animation step in millis"
     )]
     step: u64,
     #[structopt(
@@ -103,18 +123,13 @@ fn main() {
         }
         lines
     };
-    let duration = if opt.duration < 0 {
-        None
-    } else {
-        Some(std::time::Duration::from_millis(opt.duration as u64))
-    };
     let mut lines = initial_lines.clone();
     print(&stdout, &initial_lines, &lines, true);
     let start_instant = std::time::Instant::now();
     let mut rng = rand::thread_rng();
     loop {
         let mut glitchness = opt.glitchness;
-        if let Some(duration) = duration {
+        if let Duration::Some(duration) = opt.duration {
             if start_instant.elapsed() >= duration {
                 break;
             }
