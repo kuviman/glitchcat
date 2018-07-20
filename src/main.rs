@@ -34,7 +34,7 @@ struct Opt {
         short = "d",
         long = "duration",
         default_value = "1000",
-        help = "Duration of animation in millis (of \"infinite\"/\"inf\")"
+        help = "Duration of animation in millis (or \"infinite\"/\"inf\")"
     )]
     duration: Duration,
     #[structopt(
