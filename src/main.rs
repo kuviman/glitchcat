@@ -26,7 +26,7 @@ pub enum Duration {
 impl FromStr for Duration {
     type Err = <u64 as FromStr>::Err;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s == "infinite" {
+        if s == "infinite" || s == "inf" {
             Ok(Duration::Infinite)
         } else {
             Ok(Duration::Some(parse_duration(s)?))
@@ -52,7 +52,7 @@ struct Opt {
         short = "d",
         long = "duration",
         default_value = "1000",
-        help = "Duration of animation in millis (of \"infinite\")"
+        help = "Duration of animation in millis (of \"infinite\"/\"inf\")"
     )]
     duration: Duration,
     #[structopt(
