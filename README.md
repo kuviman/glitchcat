@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/kuviman/glitchcat.svg?branch=master)](https://travis-ci.org/kuviman/glitchcat)
 
-`glitchcat` is a cat-like program that creates a glitch-like animation of text.
+`glitchcat` is a cat-like with glitch animation.
 
 ![gif](demo.gif)
 

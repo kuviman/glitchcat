@@ -39,7 +39,7 @@ fn to_millis(duration: std::time::Duration) -> u64 {
 }
 
 #[derive(StructOpt)]
-#[structopt(about = "cat-like program with glitch-like animation")]
+#[structopt(about = "cat-like program with glitch animation")]
 struct Opt {
     #[structopt(
         short = "m",

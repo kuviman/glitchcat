@@ -1,6 +1,6 @@
 [package]
 name = "glitchcat"
-description = "cat-like program with glitch-like animation"
+description = "cat-like program with glitch animation"
 version = "0.2.0"
 authors = ["kuviman <kuviman@gmail.com>"]
 license = "MIT"
