@@ -1,7 +1,7 @@
 use *;
 
 pub struct Homoglyphs {
-    groups: HashMap<char, HashSet<char>>,
+    groups: HashMap<char, Vec<char>>,
 }
 
 impl Homoglyphs {
@@ -25,20 +25,21 @@ impl Homoglyphs {
                 }
             }
         }
-        Self { groups }
+        Self {
+            groups: groups
+                .into_iter()
+                .map(|(c, mut group)| {
+                    group.remove(&c);
+                    assert!(!group.is_empty());
+                    (c, group.into_iter().collect())
+                })
+                .collect(),
+        }
     }
 
     pub fn random_silimar(&self, c: char) -> char {
         match self.groups.get(&c) {
-            Some(group) => {
-                let group: Vec<char> = group.iter().map(|&c| c).collect();
-                let i = rand::thread_rng().gen_range(0, group.len() - 1);
-                if group[i] == c {
-                    group[i + 1]
-                } else {
-                    group[i]
-                }
-            }
+            Some(group) => group[rand::thread_rng().gen_range(0, group.len())],
             None => c,
         }
     }
