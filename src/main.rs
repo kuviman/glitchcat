@@ -5,12 +5,16 @@ extern crate structopt;
 extern crate strum;
 #[macro_use]
 extern crate strum_macros;
+#[macro_use]
+extern crate failure;
 
 mod duration;
 mod homoglyph;
+mod percent;
 
 use duration::*;
 use homoglyph::*;
+use percent::*;
 use rand::Rng;
 use std::collections::{HashMap, HashSet};
 use std::io::Read;
@@ -47,14 +51,14 @@ struct Opt {
         default_value = "90",
         help = "Percentage of symbols glitched each animation step"
     )]
-    amount: usize,
+    amount: Percent,
     #[structopt(
         short = "g",
         long = "glitchness",
         default_value = "80",
         help = "Probability of a symbol to be glitched into other symbol"
     )]
-    glitchness: usize,
+    glitchness: Percent,
     #[structopt(
         short = "f",
         long = "fade",
@@ -130,14 +134,16 @@ impl GlitchCat {
         if let Duration::Some(duration) = self.opt.duration {
             let time_left = duration - self.start_instant.elapsed();
             if time_left < self.opt.fade {
-                glitchness =
-                    glitchness * to_millis(time_left) as usize / to_millis(self.opt.fade) as usize;
+                glitchness = Percent::new(
+                    (glitchness.as_u8() as usize * to_millis(time_left) as usize
+                        / to_millis(self.opt.fade) as usize) as u8,
+                );
             }
         }
         for (initial_line, line) in self.initial_lines.iter().zip(self.lines.iter_mut()) {
             for (&initial_c, c) in initial_line.iter().zip(line.iter_mut()) {
-                if self.rng.gen_range(0, 100) < glitchness {
-                    if self.rng.gen_range(0, 100) < self.opt.amount {
+                if self.rng.gen::<Percent>() < glitchness {
+                    if self.rng.gen::<Percent>() < self.opt.amount {
                         *c = self.homoglyphs.random_silimar(initial_c);
                     }
                 } else {
