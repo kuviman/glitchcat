@@ -14,6 +14,10 @@ use std::collections::HashMap;
 use std::io::Read;
 use std::str::FromStr;
 
+fn parse_duration(s: &str) -> Result<std::time::Duration, <u64 as FromStr>::Err> {
+    Ok(std::time::Duration::from_millis(s.parse()?))
+}
+
 pub enum Duration {
     Some(std::time::Duration),
     Infinite,
@@ -25,9 +29,13 @@ impl FromStr for Duration {
         if s == "infinite" {
             Ok(Duration::Infinite)
         } else {
-            Ok(Duration::Some(std::time::Duration::from_millis(s.parse()?)))
+            Ok(Duration::Some(parse_duration(s)?))
         }
     }
+}
+
+fn to_millis(duration: std::time::Duration) -> u64 {
+    duration.as_secs() * 1000 + duration.subsec_millis() as u64
 }
 
 #[derive(StructOpt)]
@@ -51,9 +59,10 @@ struct Opt {
         short = "s",
         long = "step",
         default_value = "100",
-        help = "Animation step in millis"
+        help = "Animation step in millis",
+        parse(try_from_str = "parse_duration")
     )]
-    step: u64,
+    step: std::time::Duration,
     #[structopt(
         short = "a",
         long = "amount",
@@ -72,9 +81,10 @@ struct Opt {
         short = "f",
         long = "fade",
         default_value = "400",
-        help = "Time to fade back to normal text in millis"
+        help = "Time to fade back to normal text in millis",
+        parse(try_from_str = "parse_duration")
     )]
-    fade: u64,
+    fade: std::time::Duration,
 }
 
 fn print(
@@ -134,9 +144,9 @@ fn main() {
                 break;
             }
             let time_left = duration - start_instant.elapsed();
-            let time_left = time_left.as_secs() * 1000 + time_left.subsec_millis() as u64;
             if time_left < opt.fade {
-                glitchness = glitchness * time_left as usize / opt.fade as usize;
+                glitchness =
+                    glitchness * to_millis(time_left) as usize / to_millis(opt.fade) as usize;
             }
         }
         for (initial_line, line) in initial_lines.iter().zip(lines.iter_mut()) {
@@ -151,7 +161,7 @@ fn main() {
             }
         }
         print(&stdout, &initial_lines, &lines, false);
-        std::thread::sleep(std::time::Duration::from_millis(opt.step));
+        std::thread::sleep(opt.step);
     }
     print(&stdout, &initial_lines, &initial_lines, false);
 }
