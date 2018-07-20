@@ -12,7 +12,9 @@ Use can even use it together with [`lolcat`](https://github.com/busyloop/lolcat)
 
 ## Install
 
-To install, run:
+To install, you will need [Rust compiler](https://rust-lang.org)
+
+Then run:
 
 ```sh
 cargo install glitchcat
