@@ -69,6 +69,8 @@ struct Opt {
         parse(try_from_str = "parse_duration")
     )]
     fade: std::time::Duration,
+    #[structopt(short = "p", long = "plain", help = "Disable animation and colors")]
+    plain: bool,
 }
 
 struct GlitchCat {
@@ -133,7 +135,7 @@ impl GlitchCat {
         for (initial_line, line) in self.initial_lines.iter().zip(self.lines.iter()) {
             let mut output = String::new();
             for (&initial_c, &c) in initial_line.iter().zip(line.iter()) {
-                if initial_c == c {
+                if self.opt.plain || initial_c == c {
                     output.push(c);
                 } else {
                     output += &console::style(c).dim().to_string();
@@ -169,6 +171,11 @@ impl GlitchCat {
     }
 
     fn run(mut self) {
+        if self.opt.plain {
+            self.update();
+            self.print();
+            return;
+        }
         self.print();
         loop {
             if let Duration::Some(duration) = self.opt.duration {
