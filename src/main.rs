@@ -23,6 +23,8 @@ use std::str::FromStr;
 #[derive(StructOpt)]
 #[structopt(about = "cat-like program with glitch animation")]
 struct Opt {
+    #[structopt(help = "File to read input from")]
+    file: Option<String>,
     #[structopt(
         short = "m",
         long = "mode",
@@ -82,7 +84,7 @@ struct GlitchCat {
 impl GlitchCat {
     fn new(opt: Opt) -> Self {
         let term = console::Term::buffered_stdout();
-        let initial_lines = Self::read_input(&term);
+        let initial_lines = Self::read_input(&opt, &term);
         let lines = initial_lines.clone();
         Self {
             homoglyphs: Homoglyphs::new_with_mode(opt.mode),
@@ -95,10 +97,23 @@ impl GlitchCat {
         }
     }
 
-    fn read_input(term: &console::Term) -> Vec<Vec<char>> {
+    fn read_input(opt: &Opt, term: &console::Term) -> Vec<Vec<char>> {
         let term_width = term.size().1 as usize;
         let mut text = String::new();
-        std::io::stdin()
+        let mut input: Box<Read> = match opt.file {
+            Some(ref path) => match std::fs::File::open(path) {
+                Ok(file) => Box::new(file),
+                Err(_) => {
+                    eprintln!(
+                        "{}",
+                        console::style(format!("Failed to read {:?}", path)).red()
+                    );
+                    std::process::exit(1);
+                }
+            },
+            None => Box::new(std::io::stdin()),
+        };
+        input
             .read_to_string(&mut text)
             .expect("Failed to read text");
         let mut lines = Vec::new();
